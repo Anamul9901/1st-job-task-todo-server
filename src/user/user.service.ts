@@ -1,26 +1,43 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserDocument } from './schema/User';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(@InjectModel(User.name) private UserModel: Model<UserDocument>) {}
+
+  create(createUserDto: CreateUserDto): Promise<User> {
+    const model = new this.UserModel();
+    model.name = createUserDto.name;
+    model.email = createUserDto.email;
+    model.photo = createUserDto.photo;
+    return model.save();
   }
 
-  findAll() {
-    return `This action returns all user`;
+  findAll(): Promise<User[]> {
+    return this.UserModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  findOne(id: string) {
+    return this.UserModel.findById(id).exec();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  update(id: string, updateUserDto: UpdateUserDto) {
+    return this.UserModel.updateOne(
+      { _id: id },
+      {
+        name: updateUserDto.name,
+        email: updateUserDto.email,
+        photo: updateUserDto.photo,
+      },
+    ).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(id: string) {
+    return this.UserModel.deleteOne({ _id: id }).exec();
   }
 }
